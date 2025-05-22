@@ -9,6 +9,7 @@ import logging
 import asyncio
 import subprocess
 from pathlib import Path
+from app.core.config import get_settings
 
 # Configure logging
 logging.basicConfig(
@@ -59,27 +60,33 @@ def run_migrations():
         current_dir = Path(__file__).parent.parent
         logger.info(f"Current directory: {current_dir}")
         
-        # Log environment variables (excluding sensitive data)
-        db_url = os.getenv("DATABASE_URL", "")
-        if db_url:
-            masked_url = db_url.split("@")[-1] if "@" in db_url else "configured"
-            logger.info(f"Database URL is configured (host: {masked_url})")
-        else:
-            logger.error("DATABASE_URL is not set")
-            raise ValueError("DATABASE_URL environment variable is required")
-
+        # Get settings and check database URL
+        settings = get_settings()
+        if not settings.DATABASE_URL:
+            logger.error("Database URL is not configured")
+            raise ValueError("Database URL is not configured")
+        
+        # Log database connection info (safely)
+        db_host = settings.DATABASE_URL.split("@")[-1].split("/")[0]
+        logger.info(f"Database configured with host: {db_host}")
+        
         # Run alembic upgrade using subprocess for better control
         logger.info("Running alembic upgrade command...")
+        env = os.environ.copy()
+        env["DATABASE_URL"] = settings.DATABASE_URL
+        
         result = subprocess.run(
             ["alembic", "upgrade", "head"],
             cwd=str(current_dir),
             capture_output=True,
-            text=True
+            text=True,
+            env=env
         )
         
         if result.returncode == 0:
             logger.info("Database migrations completed successfully")
-            logger.info(f"Migration output: {result.stdout}")
+            if result.stdout:
+                logger.info(f"Migration output: {result.stdout}")
         else:
             logger.error(f"Migration failed with return code {result.returncode}")
             logger.error(f"Migration error output: {result.stderr}")

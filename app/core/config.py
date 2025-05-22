@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
 from functools import lru_cache
+import os
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Event Management System"
@@ -32,8 +33,22 @@ class Settings(BaseSettings):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if not self.DATABASE_URL:
-            # Use asyncpg driver in the connection string
+        
+        # First try to get DATABASE_URL from environment (Render sets this)
+        database_url = os.getenv("DATABASE_URL")
+        
+        if database_url:
+            # Convert postgres:// to postgresql:// for SQLAlchemy
+            if database_url.startswith("postgres://"):
+                database_url = database_url.replace("postgres://", "postgresql://", 1)
+            
+            # Add asyncpg driver if not present
+            if "postgresql://" in database_url and "+asyncpg" not in database_url:
+                database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            
+            self.DATABASE_URL = database_url
+        elif not self.DATABASE_URL:
+            # Fallback to constructing URL from components
             self.DATABASE_URL = (
                 f"postgresql+asyncpg://{self.POSTGRES_USER}:"
                 f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/"
