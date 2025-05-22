@@ -4,6 +4,11 @@ from fastapi.responses import JSONResponse
 from fastapi_limiter import FastAPILimiter
 import redis.asyncio as redis
 import uvicorn
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Import routers
 from app.api import auth, events  # adjust if path is different
@@ -43,7 +48,8 @@ app.include_router(events.router, prefix="/api/events", tags=["events"])
 # Startup event to initialize rate limiter
 @app.on_event("startup")
 async def startup():
-    redis_instance = redis.from_url("redis://localhost", encoding="utf-8", decode_responses=True)
+    redis_url = os.getenv("REDIS_URL", "redis://localhost")
+    redis_instance = redis.from_url(redis_url, encoding="utf-8", decode_responses=True)
     await FastAPILimiter.init(redis_instance)
 
 if __name__ == "__main__":
