@@ -1,0 +1,17 @@
+fastapi==0.109.2
+uvicorn==0.27.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+sqlalchemy==2.0.27
+pydantic==2.6.1
+python-multipart==0.0.9
+alembic==1.13.1
+python-dateutil==2.8.2
+msgpack==1.0.7
+redis==5.0.1
+fastapi-limiter==0.1.6
+asyncpg==0.29.0
+python-dotenv==1.0.1
+pytest==8.0.1
+httpx==0.26.0 
+pydantic-settings
