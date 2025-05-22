@@ -23,6 +23,21 @@ A RESTful API for managing events with collaborative editing features, version c
 - Pydantic - Data validation using Python type annotations
 - JWT - For secure authentication
 
+Event Management System API
+
+1. API Documentation: https://event-management-system-9gy4.onrender.com/docs
+   - Interactive Swagger documentation
+   - Test all API endpoints
+   - View request/response schemas
+
+2. Base API URL: https://event-management-system-9gy4.onrender.com
+   Main endpoints:
+   - /api/auth/* - Authentication endpoints
+   - /api/events/* - Event management endpoints
+   
+Note: The base URL will show "Not Found" because it's an API server, not a website. 
+Please use the Swagger documentation (/docs) to explore and test the API.
+
 ## Prerequisites
 
 - Python 3.8+
