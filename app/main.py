@@ -5,19 +5,17 @@ from fastapi_limiter import FastAPILimiter
 import redis.asyncio as redis
 import uvicorn
 import os
-from dotenv import load_dotenv
 import logging
 import asyncio
-from alembic.config import Config
-from alembic import command
+import subprocess
 from pathlib import Path
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
-
-# Load environment variables
-load_dotenv()
 
 # Import routers
 from app.api import auth, events  # adjust if path is different
@@ -56,14 +54,37 @@ app.include_router(events.router, prefix="/api/events", tags=["events"])
 
 def run_migrations():
     try:
-        logger.info("Running database migrations...")
-        # Get the absolute path to alembic.ini
-        alembic_ini_path = str(Path(__file__).parent.parent / "alembic.ini")
+        logger.info("Starting database migrations...")
+        # Get the current working directory
+        current_dir = Path(__file__).parent.parent
+        logger.info(f"Current directory: {current_dir}")
         
-        # Create Alembic configuration and run upgrade
-        alembic_cfg = Config(alembic_ini_path)
-        command.upgrade(alembic_cfg, "head")
-        logger.info("Database migrations completed successfully")
+        # Log environment variables (excluding sensitive data)
+        db_url = os.getenv("DATABASE_URL", "")
+        if db_url:
+            masked_url = db_url.split("@")[-1] if "@" in db_url else "configured"
+            logger.info(f"Database URL is configured (host: {masked_url})")
+        else:
+            logger.error("DATABASE_URL is not set")
+            raise ValueError("DATABASE_URL environment variable is required")
+
+        # Run alembic upgrade using subprocess for better control
+        logger.info("Running alembic upgrade command...")
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            cwd=str(current_dir),
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode == 0:
+            logger.info("Database migrations completed successfully")
+            logger.info(f"Migration output: {result.stdout}")
+        else:
+            logger.error(f"Migration failed with return code {result.returncode}")
+            logger.error(f"Migration error output: {result.stderr}")
+            raise RuntimeError(f"Migration failed: {result.stderr}")
+            
     except Exception as e:
         logger.error(f"Error running migrations: {str(e)}")
         raise
@@ -76,7 +97,8 @@ async def startup():
         run_migrations()
     except Exception as e:
         logger.error(f"Failed to run migrations: {str(e)}")
-        # Continue startup even if migrations fail
+        # In production, you might want to raise the exception to prevent startup
+        raise
     
     # Initialize Redis rate limiter
     try:
