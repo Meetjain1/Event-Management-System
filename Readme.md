@@ -23,14 +23,15 @@ A RESTful API for managing events with collaborative editing features, version c
 - Pydantic - Data validation using Python type annotations
 - JWT - For secure authentication
 
-Event Management System API
+Event Management System API (Deployed Links)
 
-1. API Documentation: https://event-management-system-9gy4.onrender.com/docs
+1. API Documentation: [event-management-system-Docs](https://event-management-system-7j6g.onrender.com/docs)
    - Interactive Swagger documentation
    - Test all API endpoints
    - View request/response schemas
 
-2. Base API URL: https://event-management-system-9gy4.onrender.com
+2. Base API URL: [event-management-system-base](https://event-management-system-7j6g.onrender.com/)
+   
    Main endpoints:
    - /api/auth/* - Authentication endpoints
    - /api/events/* - Event management endpoints
